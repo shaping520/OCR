@@ -1,7 +1,7 @@
 name: build-easytier-android
 
 on:
-  workflow_dispatch:   # 手动点按钮触发
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,25 +11,34 @@ jobs:
       - name: Checkout EasyTier
         uses: actions/checkout@v4
         with:
-          repository: EasyTier/EasyTier   # EasyTier 官方仓库
+          repository: EasyTier/EasyTier
           path: easytier
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
 
-      - name: Install NDK
+      - name: Install Android NDK
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r25c
 
-      - name: Build
+      - name: Build EasyTier for Android arm64
         working-directory: easytier
         run: |
-          export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          export ANDROID_API=21
+          export TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
+          export PATH=$TOOLCHAIN/bin:$PATH
+
+          export CC_aarch64_linux_android=aarch64-linux-android${ANDROID_API}-clang
+          export CXX_aarch64_linux_android=aarch64-linux-android${ANDROID_API}-clang++
+          export AR_aarch64_linux_android=llvm-ar
+
           cargo build --release --target aarch64-linux-android
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: easytier-android-arm64
           path: easytier/target/aarch64-linux-android/release/easytier
