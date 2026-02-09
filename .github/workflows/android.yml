@@ -24,6 +24,20 @@ jobs:
         with:
           ndk-version: r25c
 
+      - name: Configure Cargo for Android linker
+        working-directory: easytier
+        run: |
+          mkdir -p .cargo
+          cat > .cargo/config.toml << 'EOF'
+          [target.aarch64-linux-android]
+          linker = "aarch64-linux-android21-clang"
+          ar = "llvm-ar"
+
+          [env]
+          CC_aarch64_linux_android = "aarch64-linux-android21-clang"
+          CXX_aarch64_linux_android = "aarch64-linux-android21-clang++"
+          EOF
+
       - name: Build EasyTier for Android arm64
         working-directory: easytier
         run: |
@@ -31,10 +45,7 @@ jobs:
           export TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
           export PATH=$TOOLCHAIN/bin:$PATH
 
-          export CC_aarch64_linux_android=aarch64-linux-android${ANDROID_API}-clang
-          export CXX_aarch64_linux_android=aarch64-linux-android${ANDROID_API}-clang++
-          export AR_aarch64_linux_android=llvm-ar
-
+          which aarch64-linux-android21-clang
           cargo build --release --target aarch64-linux-android
 
       - name: Upload artifact
